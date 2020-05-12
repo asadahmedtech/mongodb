@@ -9,7 +9,9 @@ tags:
 - name: "instances"
   description: "Everything to create and manage MongoDB instances"
 - name: "backup"
-  description: "Create, schedule, manage and restore backups."
+  description: "Create, schedule, manage backups."
+- name: "restore"
+  description: "Restores backup."
 - name: "logs"
   description: "Live logs and history"
 - name: "metrics"
@@ -19,3 +21,458 @@ tags:
 schemes:
 - "https"
 paths:
+  /backup:
+    get:
+      tags:
+      - backup
+      summary: Get all the snapshot available
+      operationId: getSnapshots
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      responses:
+        200:
+          description: Snapshots List
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BackupSnapshot'
+          404:
+            description: Instance ID Not Found
+          405:
+            description: Invalid Instance ID
+    post:
+      tags:
+      - backup
+      summary: Creates a new snapshot backup of the instance
+      operationId: createBackup
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be taken
+        required: true
+        type: string
+      responses:
+        200:
+          description: Backup created
+          schema:
+            $ref: '#/definitions/BackupSnapshot'
+        404:
+          description: Instance Not Found
+        405:
+          description: Invalid Instance ID
+
+    
+  /backup/{snapshotId}:
+    get:
+      tags:
+      - backup
+      summary: Get the snapshot available for the provided snapshot ID
+      operationId: getSnapshot
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: snapshotId
+        in: path
+        description: ID of snapshot that needs to be fetched
+        required: true
+        type: integer
+        format: int64
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      responses:
+        200:
+          description: Snapshots Details
+          schema:
+            $ref: '#/definitions/BackupSnapshot'
+        404:
+          description: Instance or snapshot ID not found
+        405:
+          description: Invalid instance or snapshot ID
+    patch:
+      tags:
+      - backup
+      summary: Change the expiration date of the snapshot
+      operationId: changeExpiryData
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: snapshotId
+        in: path
+        description: ID of snapshot that needs to be fetched
+        required: true
+        type: integer
+        format: int64
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      - name: expiresAt
+        in: query
+        description: New expiration date and time of the snapshot provided by snapshotID
+        required: true
+        type: string
+        format: date-time
+        
+      responses:
+        200:
+          description: Snapshots Details
+          schema:
+            $ref: '#/definitions/BackupSnapshot'
+        404:
+          description: Instance or snapshot ID not found
+        405:
+          description: Invalid instance or snapshot ID
+    delete:
+      tags:
+      - backup
+      summary: Deletes the snapshot of ID 
+      operationId: deleteSnapshot
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: snapshotId
+        in: path
+        description: ID of snapshot that needs to be fetched
+        required: true
+        type: integer
+        format: int64
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      responses:
+        200:
+          description: Backup Deletes
+        404:
+          description: Instance or snapshot ID not found
+        405:
+          description: Invalid instance or snapshot ID
+  /backup/schedule:
+    get:
+      tags:
+      - backup
+      summary: Get the backup schedule available for the provided Instance ID
+      operationId: getSchedule
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      responses:
+        200:
+          description: Backup Schedule Details
+          schema:
+            $ref: '#/definitions/BackupSchedule'
+        404:
+          description: Instance ID not found
+        405:
+          description: Invalid instance ID
+    patch:
+      tags:
+      - backup
+      summary: Change the backup schedule of the instance
+      operationId: changeBackupSchedule
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      - name: backupSchedule
+        in: body
+        description: New Backup Schedule of the Instance
+        required: true
+        schema:
+          $ref: '#/definitions/BackupSchedule'
+        
+      responses:
+        200:
+          description: Backup Schedule Changed
+          schema:
+            $ref: '#/definitions/BackupSnapshot'
+        404:
+          description: Instance ID not Found
+        405:
+          description: Invalid instance ID
+    
+  /restore:
+    get:
+      tags:
+      - restore
+      summary: Get all the restore jobs available
+      operationId: getAllRestoreJobs
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which restore jobs to be retrived
+        required: true
+        type: string
+      responses:
+        200:
+          description: Restore List
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/RestoreJob'
+        400:
+          description: Invalid ID supplied
+        
+    post:
+      tags:
+      - restore
+      summary: Creates a new snapshot backup of the instance
+      operationId: newRestoreJob
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be taken
+        required: true
+        type: string
+      - in: query
+        name: restoreType
+        description: Type of restore job to be created, wether to launch new instance or restore on the current one
+        required: true
+        type: string
+        enum:
+        - new
+        - current
+      - in: query
+        name: snapshotId
+        description: ID of the snapshot which is to be restored
+        required: true
+        type: string
+      - in: query
+        name: additionalTimestamp
+        description: Additional timestamp from the snapshot log point to which oplogs are to be replayed
+        required: true
+        type: string
+        format: date-time
+      responses:
+        200:
+          description: Restore created
+          schema:
+            $ref: '#/definitions/RestoreJob'
+        404:
+          description: Instance or Snapshot Not Found
+        405:
+          description: Invalid Instance or Snapshot ID
+
+    
+  /restore/{restoreId}:
+    get:
+      tags:
+      - restore
+      summary: Get the restore job available for the provided restore ID
+      operationId: getRestoreJob
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: restoreId
+        in: path
+        description: ID of restore job that needs to be fetched
+        required: true
+        type: integer
+        format: int64
+      - in: query
+        name: instanceId
+        description: Instance ID of the application to which snapshot is to be retrived
+        required: true
+        type: string
+      responses:
+        200:
+          description: Restore Job Details
+          schema:
+            $ref: '#/definitions/RestoreJob'
+        404:
+          description: Instance or Restore ID Not Found
+        405:
+          description: Invalid Instance or Restore ID
+           
+definitions:
+  SnapshotParts:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      storageUrl:
+        type: string
+        description: Storage path of the snapshot
+      configType:
+        type: string
+        description: Type of the cluster of which snapshot is taken, replica for monogod instance and config for config servers
+        enum:
+        - replica
+        - config
+      
+  BackupSnapshot:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      instanceId:
+        type: integer
+        format: int64
+      description:
+        type: string
+        
+      status:
+        type: string
+        description: Snapshot Status
+        enum:
+        - started
+        - failed
+        - completed
+      createdAt:
+        type: string
+        format: date-time
+        description: Date and Time of creation of Snapshot process
+      donotdelete:
+        type: boolean
+        default: false
+        description: Boolean defination of wether to delete snapshot on scheduled expiration
+      expiresAt:
+        type: string
+        format: date-time
+        description: Date and Time of expiration of snapshot stored, calculated based on creation date and backup scheduling policy
+      lastOplogAppliedTimestamp:
+        type: string
+        format: date-time
+        description: Timestamp of last oplog transaction before the snapshot was taken
+      
+      parts:
+        type: array
+        description: Stores snapshots of different servers or shards of the instance
+        items:  
+          $ref: '#/definitions/SnapshotParts'
+        
+  RestoreJob:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      instanceId:
+        type: integer
+        format: int64
+      status:
+        type: string
+        description: status of the restore job, it can be started, completed or failed
+        enum:
+        - started
+        - failed
+        - completed
+      completedAt:
+        type: string
+        format: date-time
+        description: Date and time of completion of restore process
+      snapshot:
+         $ref: '#/definitions/BackupSnapshot'
+  
+  BackupPolicyItem:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      frequencyInterval:
+        type: integer
+        format: int32
+        description: Time or day interval in which snapshots are to be taken
+      frequencyType:
+        type: string
+        description: type of frequency interval. It can be in hours, days, weeks or months.
+        enum:
+        - hours
+        - days
+        - weeks
+        - months
+      retentionUnit:
+        type: string
+        description: Unit of retention time of the snapshot taken. It can be in days, weeks or months.
+        enum:
+        - days
+        - weeks
+        - months
+      retentionValue:
+        type: integer
+        format: int32 
+        description: Time of retention of snapshot in storage
+  
+  BackupPolicy:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      policies:
+        type: array
+        items:
+          $ref: '#/definitions/BackupPolicyItem'
+        description: Multiple policy items can be used to define a dynamic backup schedule.
+
+  BackupSchedule:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      instanceId:
+        type: integer
+        format: int64
+      nextScheduledtime:
+        type: string
+        format: date-time
+        description: stores the next scheduled time of snapshot calculated using the reference time and backup policy 
+      policy:
+        $ref: '#/definitions/BackupPolicy'
+      scheduleHour:
+        type: integer
+        format: int32
+      scheduleMins:
+        type: integer
+        format: int32
+        
