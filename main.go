@@ -22,8 +22,5 @@ func main() {
 	handler := routes.NewHandler()
 
 	log.Println("starting server on", PORT)
-	if err := http.ListenAndServe(PORT, handler); err != nil {
-		log.Fatal(err)
-	}
-
+	log.Fatal(http.ListenAndServe(PORT, handler))
 }

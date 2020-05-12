@@ -24,6 +24,9 @@ func NewHandler() http.Handler {
 
 	router := NewRouter()
 
+	// Load routes for instances
+	router = LoadInstancesRoutes(router)
+
 	handler := cors.AllowAll().Handler(router)
 
 	return handler
