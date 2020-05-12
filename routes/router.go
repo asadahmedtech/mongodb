@@ -28,7 +28,7 @@ func NewHandler() http.Handler {
 	router = LoadInstancesRoutes(router)
 
 	// Load routes for backup and restore
-	router = LoadBackupsRoutes(router)
+	router = LoadBackupRoutes(router)
 
 	handler := cors.AllowAll().Handler(router)
 

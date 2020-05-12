@@ -5,7 +5,7 @@ import (
 	"github.com/semut-technologies/mongodb/handlers"
 )
 
-func LoadBackupsRoutes(r *mux.Router) *mux.Router {
+func LoadBackupRoutes(r *mux.Router) *mux.Router {
 
 	// Get list of all the available backups
 	r.HandleFunc("/backup", handlers.DefaultHandler).Methods("GET")
