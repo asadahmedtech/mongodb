@@ -1,0 +1,21 @@
+swagger: "2.0"
+info:
+  description: "This is a basic overview of the various endpoints to be exposed for MongoDB PaaS product."
+  version: "1.0.0"
+  title: "MongoDB Paas"
+host: "localhost"
+basePath: "/mongodb"
+tags:
+- name: "instances"
+  description: "Everything to create and manage MongoDB instances"
+- name: "backup"
+  description: "Create, schedule, manage and restore backups."
+- name: "logs"
+  description: "Live logs and history"
+- name: "metrics"
+  description: "View cluster status and resources utilisation"
+- name: "policies"
+  description: "Various policies for autoscaling"
+schemes:
+- "https"
+paths:
